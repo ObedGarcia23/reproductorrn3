@@ -179,8 +179,8 @@ details[open] summary{color:var(--text);margin-bottom:8px}
 .hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
 label.check{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer}
 label.check input{accent-color:var(--accent)}
-.dev-card{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:16px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;margin-top:24px}
-.dev-avatar{width:120px;height:120px;border-radius:50%;border:2px solid var(--accent);object-fit:cover;flex-shrink:0;box-shadow:0 4px 14px rgba(124,92,255,0.25)}
+.dev-card{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:12px;margin-top:14px;flex-shrink:0}
+.dev-avatar{width:80px;height:80px;border-radius:50%;border:2px solid var(--accent);object-fit:cover;flex-shrink:0;box-shadow:0 4px 10px rgba(124,92,255,0.2)}
 .dev-info{width:100%;display:flex;flex-direction:column;align-items:center}
 .dev-name{font-size:14px;font-weight:600;color:var(--text);margin-top:2px}
 .dev-role{font-size:11px;color:var(--muted);margin-bottom:6px}
@@ -294,6 +294,18 @@ label.check input{accent-color:var(--accent)}
 <ul class="artist-list" id="artistList">
 <li class="artists-empty">Carga musica para ver tus artistas</li>
 </ul>
+<div class="dev-card">
+  <img src="obed.jpg" alt="Obed García" class="dev-avatar">
+  <div class="dev-info">
+    <div class="dev-name">Obed García</div>
+    <div class="dev-role">Desarrollador del Proyecto</div>
+    <div class="hint" style="margin-top:0;margin-bottom:4px;font-size:10px;">Para soporte o reportar problemas:</div>
+    <a href="mailto:ojgarcia@gildan.com" class="dev-contact">
+      <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      ojgarcia@gildan.com
+    </a>
+  </div>
+</div>
 </aside>
 <main class="panel">
 <div class="warning-box" id="fileWarning">Estas abriendo el archivo con file://. Si la musica no se reproduce, usa "INICIAR-Reproductor.bat" para abrirlo via servidor local.</div>
@@ -451,18 +463,6 @@ label.check input{accent-color:var(--accent)}
 <label class="check"><input type="checkbox" id="notifyMe" checked> Mostrar notificacion visual</label>
 <button class="btn small ghost" id="testExerciseBtn" style="margin-top:10px;">Probar audio ahora</button>
 </details>
-<div class="dev-card">
-  <img src="obed.jpg" alt="Obed García" class="dev-avatar">
-  <div class="dev-info">
-    <div class="dev-name">Obed García</div>
-    <div class="dev-role">Desarrollador del Proyecto</div>
-    <div class="hint" style="margin-top:0;margin-bottom:4px;font-size:10px;">Para soporte o reportar problemas:</div>
-    <a href="mailto:ojgarcia@gildan.com" class="dev-contact">
-      <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-      ojgarcia@gildan.com
-    </a>
-  </div>
-</div>
 </aside>
 </div>
 <div class="exercise-overlay" id="exerciseOverlay">
@@ -1112,14 +1112,40 @@ function fmtTime(s){if(!s||isNaN(s))return"0:00";var m=Math.floor(s/60),sec=Math
 function pad2(n){return(n<10?"0":"")+n}
 function todayStr(){var d=new Date();return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())}
 function nowHHMM(){var d=new Date();return pad2(d.getHours())+":"+pad2(d.getMinutes())}
+function nowPeriod(){var d=new Date();return d.getHours()<12?"AM":"PM"}
+function get12HourMinutes(timeStr){
+  var p=timeStr.split(":");
+  var h=parseInt(p[0],10)%12;
+  var m=parseInt(p[1],10);
+  return h*60+m;
+}
+function getNow12HourMinutes(){
+  var d=new Date();
+  return (d.getHours()%12)*60+d.getMinutes();
+}
+function match12HourTime(t1,t2){
+  var p1=t1.split(":");
+  var p2=t2.split(":");
+  if(p1.length!==2||p2.length!==2)return false;
+  var h1=parseInt(p1[0],10)%12;
+  var m1=parseInt(p1[1],10);
+  var h2=parseInt(p2[0],10)%12;
+  var m2=parseInt(p2[1],10);
+  return h1===h2&&m1===m2;
+}
+
 function renderSchedules(){
   var ul=$("scheduleList");ul.innerHTML="";var today=todayStr();
   if(!state.schedules.length){ul.innerHTML='<li style="background:transparent;border:none;color:var(--muted);font-size:12px;padding:6px 0;">Sin horarios programados</li>';updateNextExerciseLabel();return}
   state.schedules.sort(function(a,b){return a.time.localeCompare(b.time)});
+  
+  var isPM = new Date().getHours() >= 12;
+  var currentPeriodKey = today + "-" + (isPM ? "PM" : "AM");
+  
   for(var i=0;i<state.schedules.length;i++){
     var s=state.schedules[i],li=document.createElement("li");
-    var f=s.lastFiredDate===today;if(f)li.classList.add("fired");
-    li.innerHTML='<div class="sch-time">'+s.time+'</div><div class="sch-status">'+(f?"Ya sono hoy":"Pendiente")+'</div><button class="btn small danger ghost" data-rm="'+s.id+'">x</button>';
+    var f=s.lastFiredPeriod===currentPeriodKey;if(f)li.classList.add("fired");
+    li.innerHTML='<div class="sch-time">'+s.time+'</div><div class="sch-status">'+(f?"Ya sonó":"Pendiente")+'</div><button class="btn small danger ghost" data-rm="'+s.id+'">x</button>';
     ul.appendChild(li)
   }
   var btns=ul.querySelectorAll("[data-rm]");
@@ -1131,22 +1157,47 @@ function renderSchedules(){
 function updateNextExerciseLabel(){
   var el=$("nextExercise");
   if(!state.schedules.length){el.textContent="Sin horarios";return}
-  var today=todayStr(),now=nowHHMM();
-  var pending=state.schedules.filter(function(s){return s.lastFiredDate!==today&&s.time>now});
-  if(pending.length){pending.sort(function(a,b){return a.time.localeCompare(b.time)});el.textContent="Proxima pausa: "+pending[0].time}
-  else el.textContent="Sin pausas restantes hoy"
+  
+  var today = todayStr();
+  var isPM = new Date().getHours() >= 12;
+  var currentPeriodKey = today + "-" + (isPM ? "PM" : "AM");
+  
+  var nowMins = getNow12HourMinutes();
+  
+  var pending = state.schedules.filter(function(s) {
+    var schedMins = get12HourMinutes(s.time);
+    return s.lastFiredPeriod !== currentPeriodKey && schedMins > nowMins;
+  });
+  
+  if (pending.length) {
+    pending.sort(function(a, b) {
+      return get12HourMinutes(a.time) - get12HourMinutes(b.time);
+    });
+    el.textContent = "Proxima pausa: " + pending[0].time + (isPM ? " PM" : " AM");
+  } else {
+    el.textContent = isPM ? "Sin pausas restantes hoy" : "Proxima pausa: en la tarde (PM)";
+  }
 }
 $("addTimeBtn").addEventListener("click",function(){
   var time=$("newTime").value;if(!time)return;
   for(var i=0;i<state.schedules.length;i++)if(state.schedules[i].time===time){toast("Esa hora ya esta programada");return}
-  state.schedules.push({id:Date.now(),time:time,lastFiredDate:""});
+  state.schedules.push({id:Date.now(),time:time,lastFiredDate:"",lastFiredPeriod:""});
   renderSchedules();saveSettings()
 });
 setInterval(function(){
-  var now=nowHHMM(),today=todayStr();
+  var now=nowHHMM(),today=todayStr(),period=nowPeriod();
+  var currentPeriodKey = today + "-" + period;
   for(var i=0;i<state.schedules.length;i++){
     var s=state.schedules[i];
-    if(s.time===now&&s.lastFiredDate!==today&&!state.exerciseRunning){s.lastFiredDate=today;saveSettings();renderSchedules();triggerExercise();break}
+    var isTimeMatch = match12HourTime(s.time, now);
+    if(isTimeMatch && s.lastFiredPeriod!==currentPeriodKey && !state.exerciseRunning){
+      s.lastFiredPeriod=currentPeriodKey;
+      s.lastFiredDate=today;
+      saveSettings();
+      renderSchedules();
+      triggerExercise();
+      break;
+    }
   }
 },15000);
 function triggerExercise(){
