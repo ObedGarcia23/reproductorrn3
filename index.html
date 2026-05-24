@@ -187,6 +187,78 @@ label.check input{accent-color:var(--accent)}
 .dev-contact{font-size:12px;color:var(--accent);text-decoration:none;display:inline-flex;align-items:center;gap:6px;background:rgba(124,92,255,0.08);border:1px solid rgba(124,92,255,0.2);padding:6px 12px;border-radius:20px;transition:all 0.15s ease}
 .dev-contact:hover{background:rgba(124,92,255,0.15);border-color:var(--accent);transform:translateY(-1px)}
 .dev-contact svg{width:13px;height:13px;fill:currentColor}
+
+/* ESTILOS DE INTERCOMUNICADOR Y MICRÓFONO */
+.mic-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  border: 2px solid var(--border);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 12px auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  outline: none;
+}
+.mic-btn:hover {
+  background: rgba(255,255,255,0.1);
+  transform: scale(1.05);
+}
+.mic-btn svg {
+  transition: transform 0.2s ease;
+}
+.mic-btn:active svg {
+  transform: scale(0.9);
+}
+.mic-btn.active-record {
+  background: linear-gradient(135deg, var(--danger), #ff4757);
+  border-color: transparent;
+  color: #fff;
+  animation: pulse-red 1.5s infinite;
+  box-shadow: 0 0 20px rgba(255, 107, 138, 0.4);
+}
+.mic-btn.active-live {
+  background: linear-gradient(135deg, var(--ok), #2ed573);
+  border-color: transparent;
+  color: #fff;
+  animation: pulse-green 1.5s infinite;
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.4);
+}
+@keyframes pulse-red {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 107, 138, 0.4); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 107, 138, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 107, 138, 0); }
+}
+@keyframes pulse-green {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+}
+.intercom-tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  outline: none;
+}
+.intercom-tab-btn.active {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(124,92,255,0.25);
+}
 </style>
 </head>
 <body>
@@ -289,8 +361,16 @@ label.check input{accent-color:var(--accent)}
 </main>
 <aside class="panel right-aside">
 <div style="margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border);">
-  <h2>Llamados por Voz (TTS) 🎙️</h2>
-  <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+  <h2>Llamados e Intercomunicador 🎙️</h2>
+  
+  <!-- Tabs Selectores -->
+  <div style="display: flex; gap: 4px; margin-top: 10px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 3px;">
+    <button class="intercom-tab-btn active" id="tabBtnTts">Texto (TTS)</button>
+    <button class="intercom-tab-btn" id="tabBtnMic">Micrófono 🎤</button>
+  </div>
+  
+  <!-- CONTENIDO TAB TEXTO (TTS) -->
+  <div id="tabContentTts" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
     <textarea id="ttsTextInput" placeholder="Ej: Obed Garcia, por favor ubicarse en la Mesa de produccion 1:5" style="width:100%; height:64px; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); padding:10px; border-radius:10px; font-size:12px; outline:none; font-family:inherit; transition:all .15s; resize:none;"></textarea>
     
     <div style="display: flex; gap: 8px; align-items: center;">
@@ -317,11 +397,36 @@ label.check input{accent-color:var(--accent)}
           <span>Tono: <span id="ttsPitchVal">1.0</span></span>
           <input type="range" id="ttsPitch" min="0.5" max="1.5" step="0.1" value="1.0" style="width: 100px; height: 3px; accent-color: var(--accent);">
         </div>
-        <label class="check" style="font-size: 11px; margin-top: 2px; color: var(--muted); cursor:pointer;">
-          <input type="checkbox" id="ttsChimeToggle" checked style="accent-color:var(--accent);"> Sonar timbre de intercom
-        </label>
       </div>
     </details>
+  </div>
+  
+  <!-- CONTENIDO TAB MICRÓFONO -->
+  <div id="tabContentMic" style="display: none; flex-direction: column; gap: 10px; margin-top: 10px; text-align: center;">
+    <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 8px; border-radius: 10px; text-align: left;">
+      <span style="font-size: 11px; color: var(--muted); flex-shrink: 0;">Modo de Transmisión:</span>
+      <select id="micModeSelect" style="flex:1; background:transparent; border:none; color:var(--text); font-size:11px; outline:none; font-family:inherit; cursor:pointer; font-weight:600; color-scheme:dark;">
+        <option value="record">Mensaje 💾 (Grabar y Emitir - Sin eco)</option>
+        <option value="live">Directo ⚡ (Transmisión en Vivo)</option>
+      </select>
+    </div>
+    
+    <!-- Botón de Micrófono -->
+    <div style="position: relative; margin: 10px 0;">
+      <button class="mic-btn" id="micBtn" style="margin: 0 auto;">
+        <svg viewBox="0 0 24 24" style="width:28px; height:28px; fill:currentColor;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+      </button>
+      <div id="recordTimer" style="display:none; font-variant-numeric:tabular-nums; font-size:13px; font-weight:600; color:var(--danger); margin-top:4px;">00:00</div>
+    </div>
+    
+    <div id="micStatusText" style="font-size: 11px; color: var(--muted); line-height: 1.4; min-height: 32px;">Pulsa el botón de arriba para iniciar</div>
+  </div>
+  
+  <!-- Opción del Timbre (Común para ambos) -->
+  <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.04);">
+    <label class="check" style="font-size: 11px; margin-top: 0; color: var(--muted); cursor:pointer;">
+      <input type="checkbox" id="ttsChimeToggle" checked style="accent-color:var(--accent);"> Sonar timbre de intercom
+    </label>
   </div>
 </div>
 
@@ -1259,7 +1364,7 @@ $("only2026Toggle").addEventListener("change", function(e) {
   renderGenres();
 });
 
-// --- SISTEMA DE LLAMADOS POR VOZ (TTS) ---
+// --- SISTEMA DE LLAMADOS Y MICRÓFONO ---
 var defaultTtsPresets = [
   "Obed Garcia, por favor ubicarse en la Mesa de produccion 1:5",
   "Atencion personal, inicio de pausa ergonomica",
@@ -1509,6 +1614,7 @@ function speakAnnouncement(text) {
   }
 }
 
+// SLIDERS E INTERACTIVIDAD DE VOZ (TTS)
 $("ttsRate").addEventListener("input", function(e) {
   $("ttsRateVal").textContent = parseFloat(e.target.value).toFixed(1);
 });
@@ -1524,6 +1630,208 @@ $("ttsPlayBtn").addEventListener("click", function() {
   }
   speakAnnouncement(text);
   saveTtsPreset(text);
+});
+
+// LOGICA DE PESTAÑAS (TABS)
+$("tabBtnTts").addEventListener("click", function() {
+  this.classList.add("active");
+  $("tabBtnMic").classList.remove("active");
+  $("tabContentTts").style.display = "flex";
+  $("tabContentMic").style.display = "none";
+});
+
+$("tabBtnMic").addEventListener("click", function() {
+  this.classList.add("active");
+  $("tabBtnTts").classList.remove("active");
+  $("tabContentMic").style.display = "flex";
+  $("tabContentTts").style.display = "none";
+});
+
+// --- LÓGICA DE GRABACIÓN Y EMISIÓN (MICRÓFONO) ---
+var mediaRecorder = null;
+var audioChunks = [];
+var isRecording = false;
+var recordStartTime = 0;
+var recordTimerInterval = null;
+
+// --- LÓGICA DE MICRO EN VIVO (PTT) ---
+var isLiveMicActive = false;
+var liveMicStream = null;
+var liveAudioCtx = null;
+var liveMicSource = null;
+var liveMicMusicWasPlaying = false;
+var originalMusicVol = 0.8;
+
+function startRecording() {
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = function(e) {
+      audioChunks.push(e.data);
+    };
+    mediaRecorder.onstop = function() {
+      var audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      var audioUrl = URL.createObjectURL(audioBlob);
+      
+      var origVolume = musicPlayer.volume;
+      var isMusicPlaying = !musicPlayer.paused && state.isPlayingMusic;
+      var hasChime = $("ttsChimeToggle").checked;
+      
+      function playRecording() {
+        var playbackAudio = new Audio(audioUrl);
+        playbackAudio.play();
+        playbackAudio.onended = function() {
+          if (isMusicPlaying) {
+            fadeVolume(musicPlayer, origVolume, 500);
+          }
+          stream.getTracks().forEach(function(track) { track.stop(); });
+        };
+        playbackAudio.onerror = function() {
+          if (isMusicPlaying) {
+            fadeVolume(musicPlayer, origVolume, 500);
+          }
+          stream.getTracks().forEach(function(track) { track.stop(); });
+        };
+      }
+      
+      if (isMusicPlaying) {
+        fadeVolume(musicPlayer, 0.05, 300, function() {
+          if (hasChime) {
+            playIntercomChime(playRecording);
+          } else {
+            playRecording();
+          }
+        });
+      } else {
+        if (hasChime) {
+          playIntercomChime(playRecording);
+        } else {
+          playRecording();
+        }
+      }
+    };
+    
+    mediaRecorder.start();
+    isRecording = true;
+    $("micBtn").classList.add("active-record");
+    $("micStatusText").innerHTML = "🔴 Grabando mensaje...<br>Pulsa el botón otra vez para detener";
+    
+    recordStartTime = Date.now();
+    recordTimerInterval = setInterval(updateRecordTimer, 1000);
+    $("recordTimer").style.display = "block";
+    $("recordTimer").textContent = "00:00";
+  }).catch(function(err) {
+    console.error("Error micrófono:", err);
+    toast("Error: No se pudo acceder al micrófono");
+  });
+}
+
+function stopRecording() {
+  if (mediaRecorder && isRecording) {
+    mediaRecorder.stop();
+    isRecording = false;
+    $("micBtn").classList.remove("active-record");
+    $("micStatusText").textContent = "Llamado procesado y emitiendo...";
+    clearInterval(recordTimerInterval);
+    $("recordTimer").style.display = "none";
+  }
+}
+
+function updateRecordTimer() {
+  var elapsed = Math.floor((Date.now() - recordStartTime) / 1000);
+  var mins = Math.floor(elapsed / 60);
+  var secs = elapsed % 60;
+  $("recordTimer").textContent = pad2(mins) + ":" + pad2(secs);
+  
+  if (elapsed >= 20) {
+    stopRecording();
+  }
+}
+
+function startLiveMic() {
+  var isMusicPlaying = !musicPlayer.paused && state.isPlayingMusic;
+  var origVol = musicPlayer.volume;
+  var hasChime = $("ttsChimeToggle").checked;
+  
+  function activateMic() {
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+      liveMicStream = stream;
+      var AudioContext = window.AudioContext || window.webkitAudioContext;
+      liveAudioCtx = new AudioContext();
+      liveMicSource = liveAudioCtx.createMediaStreamSource(stream);
+      liveMicSource.connect(liveAudioCtx.destination);
+      
+      isLiveMicActive = true;
+      $("micBtn").classList.add("active-live");
+      $("micStatusText").innerHTML = "📢 MICRÓFONO EN VIVO ACTIVO<br>Habla ahora...";
+    }).catch(function(err) {
+      console.error(err);
+      toast("Error al abrir micrófono");
+      if (isMusicPlaying) fadeVolume(musicPlayer, origVol, 300);
+    });
+  }
+  
+  liveMicMusicWasPlaying = isMusicPlaying;
+  originalMusicVol = origVol;
+  
+  if (isMusicPlaying) {
+    fadeVolume(musicPlayer, 0.03, 300, function() {
+      if (hasChime) {
+        playIntercomChime(activateMic);
+      } else {
+        activateMic();
+      }
+    });
+  } else {
+    if (hasChime) {
+      playIntercomChime(activateMic);
+    } else {
+      activateMic();
+    }
+  }
+}
+
+function stopLiveMic() {
+  if (isLiveMicActive) {
+    if (liveMicStream) {
+      liveMicStream.getTracks().forEach(function(track) { track.stop(); });
+      liveMicStream = null;
+    }
+    if (liveAudioCtx) {
+      liveAudioCtx.close();
+      liveAudioCtx = null;
+    }
+    isLiveMicActive = false;
+    $("micBtn").classList.remove("active-live");
+    $("micStatusText").textContent = "Micrófono Directo apagado";
+    
+    if (liveMicMusicWasPlaying) {
+      fadeVolume(musicPlayer, originalMusicVol, 500);
+    }
+  }
+}
+
+$("micBtn").addEventListener("click", function() {
+  var mode = $("micModeSelect").value;
+  if (mode === "record") {
+    if (!isRecording) {
+      startRecording();
+    } else {
+      stopRecording();
+    }
+  } else {
+    if (!isLiveMicActive) {
+      startLiveMic();
+    } else {
+      stopLiveMic();
+    }
+  }
+});
+
+$("micModeSelect").addEventListener("change", function() {
+  stopRecording();
+  stopLiveMic();
+  $("micStatusText").textContent = "Pulsa el botón de arriba para iniciar";
 });
 
 $("resetCatalogBtn").addEventListener("click", function() {
