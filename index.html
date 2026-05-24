@@ -373,76 +373,7 @@ label.check input{accent-color:var(--accent)}
 <button class="btn primary small" id="connectServerBtn" style="padding:6px 12px;">Conectar Nube</button>
 </div>
 
-<!-- LABORATORIO DSP DE AUDIO -->
-<details class="genres-panel" style="margin-bottom: 14px;">
-  <summary style="font-weight:600; font-size:12px; display:flex; align-items:center; gap:6px;">
-    Laboratorio de Audio y Efectos 🎛️
-    <span class="pill" style="background: rgba(124,92,255,0.15); color: var(--accent);">PRO</span>
-  </summary>
-  
-  <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);">
-    
-    <!-- Bass Boost & Reverb -->
-    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-      <div style="flex: 1; min-width: 140px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); padding: 8px 10px; border-radius: 8px;">
-        <span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 6px;">Super Bass Boost 🔥</span>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <input type="range" id="fxBassBoost" min="0" max="15" step="0.5" value="0" style="flex: 1; height: 3px; accent-color: var(--accent);">
-          <span id="fxBassBoostVal" class="pill" style="font-size: 10px; min-width: 32px; text-align: center;">0 dB</span>
-        </div>
-      </div>
-      
-      <div style="flex: 1; min-width: 140px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); padding: 8px 10px; border-radius: 8px;">
-        <span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;">Ambiente Espacial 3D 🏛️</span>
-        <select id="fxReverbSelect" style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text); padding: 5px; border-radius: 6px; font-size: 11px; outline: none; cursor: pointer; color-scheme: dark; font-family: inherit;">
-          <option value="none">Normal 🎧 (Estéreo Estándar)</option>
-          <option value="studio">Estudio 🎙️ (Sala Acústica)</option>
-          <option value="hall">Sala de Conciertos 🏛️ (Gran Eco)</option>
-          <option value="cathedral">Catedral ⛪ (Reverberación Infinita)</option>
-        </select>
-      </div>
-    </div>
-    
-    <!-- 5-Band Graphic Equalizer -->
-    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); padding: 10px; border-radius: 8px;">
-      <span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 10px; font-weight: 500;">Ecualizador Gráfico Profesional</span>
-      <div style="display: flex; justify-content: space-between; align-items: center; height: 100px; padding: 0 10px;">
-        
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%;">
-          <input type="range" class="eq-slider" id="eq60" min="-10" max="10" step="0.5" value="0" orient="vertical" style="-webkit-appearance: slider-vertical; width: 8px; height: 60px; accent-color: var(--accent);">
-          <span style="font-size: 9px; color: var(--muted);">60Hz</span>
-          <span id="eq60Val" style="font-size: 8px; color: var(--accent);">0dB</span>
-        </div>
-        
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%;">
-          <input type="range" class="eq-slider" id="eq230" min="-10" max="10" step="0.5" value="0" orient="vertical" style="-webkit-appearance: slider-vertical; width: 8px; height: 60px; accent-color: var(--accent);">
-          <span style="font-size: 9px; color: var(--muted);">230Hz</span>
-          <span id="eq230Val" style="font-size: 8px; color: var(--accent);">0dB</span>
-        </div>
-        
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%;">
-          <input type="range" class="eq-slider" id="eq910" min="-10" max="10" step="0.5" value="0" orient="vertical" style="-webkit-appearance: slider-vertical; width: 8px; height: 60px; accent-color: var(--accent);">
-          <span style="font-size: 9px; color: var(--muted);">910Hz</span>
-          <span id="eq910Val" style="font-size: 8px; color: var(--accent);">0dB</span>
-        </div>
-        
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%;">
-          <input type="range" class="eq-slider" id="eq4k" min="-10" max="10" step="0.5" value="0" orient="vertical" style="-webkit-appearance: slider-vertical; width: 8px; height: 60px; accent-color: var(--accent);">
-          <span style="font-size: 9px; color: var(--muted);">4kHz</span>
-          <span id="eq4kVal" style="font-size: 8px; color: var(--accent);">0dB</span>
-        </div>
-        
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%;">
-          <input type="range" class="eq-slider" id="eq14k" min="-10" max="10" step="0.5" value="0" orient="vertical" style="-webkit-appearance: slider-vertical; width: 8px; height: 60px; accent-color: var(--accent);">
-          <span style="font-size: 9px; color: var(--muted);">14kHz</span>
-          <span id="eq14kVal" style="font-size: 8px; color: var(--accent);">0dB</span>
-        </div>
-        
-      </div>
-    </div>
-    
-  </div>
-</details>
+<!-- Laboratorio de audio removido -->
 
 <ul class="playlist" id="playlist"><li class="empty">No hay canciones aun. Carga una carpeta para empezar.</li></ul>
 </main>
@@ -716,9 +647,23 @@ function saveSettings(){
 function loadSettings(){
   try{
     var raw=localStorage.getItem("repro-ergo-cfg");
-    if(!raw){state.schedules=[{id:1,time:"10:00",lastFiredDate:""},{id:2,time:"12:00",lastFiredDate:""},{id:3,time:"15:00",lastFiredDate:""},{id:4,time:"17:00",lastFiredDate:""}];return}
+    if(!raw){
+      state.schedules=[
+        {id:1,time:"10:00",lastFiredDate:"",lastFiredPeriod:""},
+        {id:2,time:"13:00",lastFiredDate:"",lastFiredPeriod:""},
+        {id:3,time:"16:00",lastFiredDate:"",lastFiredPeriod:""}
+      ];
+      return;
+    }
     var d=JSON.parse(raw);
     state.schedules=d.schedules||[];
+    if(!state.schedules || !state.schedules.length){
+      state.schedules=[
+        {id:1,time:"10:00",lastFiredDate:"",lastFiredPeriod:""},
+        {id:2,time:"13:00",lastFiredDate:"",lastFiredPeriod:""},
+        {id:3,time:"16:00",lastFiredDate:"",lastFiredPeriod:""}
+      ];
+    }
     if(typeof d.volume==="number"){musicPlayer.volume=d.volume;$("volume").value=Math.round(d.volume*100);$("volLabel").textContent=Math.round(d.volume*100)}
     state.shuffle=!!d.shuffle;state.repeat=!!d.repeat;
     if(d.autoResume!==undefined)$("autoResume").checked=d.autoResume;
@@ -1235,26 +1180,49 @@ function renderSchedules(){
 }
 function updateNextExerciseLabel(){
   var el=$("nextExercise");
-  if(!state.schedules.length){el.textContent="Sin horarios";return}
+  if(!state.schedules.length){el.textContent="Sin horarios programados";return}
   
-  var today = todayStr();
-  var isPM = new Date().getHours() >= 12;
-  var currentPeriodKey = today + "-" + (isPM ? "PM" : "AM");
+  var now = new Date();
+  var nextOccurrences = [];
   
-  var nowMins = getNow12HourMinutes();
-  
-  var pending = state.schedules.filter(function(s) {
-    var schedMins = get12HourMinutes(s.time);
-    return s.lastFiredPeriod !== currentPeriodKey && schedMins > nowMins;
-  });
-  
-  if (pending.length) {
-    pending.sort(function(a, b) {
-      return get12HourMinutes(a.time) - get12HourMinutes(b.time);
+  for(var i=0;i<state.schedules.length;i++){
+    var s=state.schedules[i];
+    var parts = s.time.split(":");
+    if(parts.length!==2) continue;
+    var baseH = parseInt(parts[0],10) % 12;
+    var M = parseInt(parts[1],10);
+    
+    // Las dos horas posibles del día (AM y PM)
+    var hours = [baseH, baseH + 12];
+    
+    hours.forEach(function(h) {
+      // Probar hoy
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, M, 0, 0);
+      if (d.getTime() > now.getTime()) {
+        nextOccurrences.push({ date: d, timeStr: s.time });
+      } else {
+        // Probar mañana
+        var dTom = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, h, M, 0, 0);
+        nextOccurrences.push({ date: dTom, timeStr: s.time });
+      }
     });
-    el.textContent = "Proxima pausa: " + pending[0].time + (isPM ? " PM" : " AM");
+  }
+  
+  if (nextOccurrences.length > 0) {
+    nextOccurrences.sort(function(a, b) {
+      return a.date.getTime() - b.date.getTime();
+    });
+    
+    var next = nextOccurrences[0];
+    var nh = next.date.getHours();
+    var period = nh >= 12 ? "PM" : "AM";
+    var displayH = nh % 12;
+    if (displayH === 0) displayH = 12;
+    var displayM = pad2(next.date.getMinutes());
+    
+    el.textContent = "Próxima pausa: " + pad2(displayH) + ":" + displayM + " " + period;
   } else {
-    el.textContent = isPM ? "Sin pausas restantes hoy" : "Proxima pausa: en la tarde (PM)";
+    el.textContent = "Sin pausas programadas";
   }
 }
 $("addTimeBtn").addEventListener("click",function(){
@@ -2114,16 +2082,10 @@ $("dedupeBtn").addEventListener("click", async function() {
   }
 });
 
-// --- LABORATORIO DSP DE AUDIO (ECUALIZADOR GRÁFICO, BASS BOOST Y REVERB) ---
+// --- AUDIO ANALYSER FOR NEON WAVE VISUALIZER ---
 var audioCtx = null;
 var analyser = null;
 var dataArray = null;
-var bassFilter = null;
-var eqFilters = {};
-var reverbWet = null;
-var reverbDry = null;
-var reverbDelay = null;
-var reverbFeedback = null;
 
 function initAudioDsp() {
   if (audioCtx) return;
@@ -2141,117 +2103,12 @@ function initAudioDsp() {
     var bufferLength = analyser.frequencyBinCount;
     dataArray = new Uint8Array(bufferLength);
     
-    // Bass Boost
-    bassFilter = audioCtx.createBiquadFilter();
-    bassFilter.type = "lowshelf";
-    bassFilter.frequency.value = 150;
-    bassFilter.gain.value = parseFloat($("fxBassBoost").value);
-    
-    // Ecualizador de 5 Bandas
-    var eqBands = [
-      { id: "60", freq: 60, el: $("eq60") },
-      { id: "230", freq: 230, el: $("eq230") },
-      { id: "910", freq: 910, el: $("eq910") },
-      { id: "4k", freq: 4000, el: $("eq4k") },
-      { id: "14k", freq: 14000, el: $("eq14k") }
-    ];
-    
-    var lastNode = bassFilter;
-    
-    eqBands.forEach(function(band) {
-      var filter = audioCtx.createBiquadFilter();
-      filter.type = "peaking";
-      filter.frequency.value = band.freq;
-      filter.Q.value = 1.0;
-      filter.gain.value = parseFloat(band.el.value);
-      eqFilters[band.id] = filter;
-      
-      lastNode.connect(filter);
-      lastNode = filter;
-    });
-    
-    lastNode.connect(analyser);
-    
-    // Reverberador Comb-Filter Espacial
-    reverbDelay = audioCtx.createDelay(1.0);
-    reverbFeedback = audioCtx.createGain();
-    var reverbFilter = audioCtx.createBiquadFilter();
-    reverbWet = audioCtx.createGain();
-    reverbDry = audioCtx.createGain();
-    
-    reverbDelay.delayTime.value = 0.15;
-    reverbFeedback.gain.value = 0.5;
-    reverbFilter.frequency.value = 1500;
-    
-    reverbDelay.connect(reverbFilter);
-    reverbFilter.connect(reverbFeedback);
-    reverbFeedback.connect(reverbDelay);
-    
-    var splitter = audioCtx.createGain();
-    analyser.connect(splitter);
-    
-    splitter.connect(reverbDry);
-    splitter.connect(reverbDelay);
-    reverbDelay.connect(reverbWet);
-    
-    reverbDry.connect(audioCtx.destination);
-    reverbWet.connect(audioCtx.destination);
-    
-    applyReverbSettings($("fxReverbSelect").value);
-    source.connect(bassFilter);
-    
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
   } catch (e) {
-    console.error("AudioContext DSP error:", e);
+    console.error("AudioContext Analyser error:", e);
   }
 }
-
-function applyReverbSettings(val) {
-  if (!reverbWet || !reverbDry || !reverbDelay || !reverbFeedback) return;
-  
-  if (val === "none") {
-    reverbWet.gain.value = 0.0;
-    reverbDry.gain.value = 1.0;
-  } else if (val === "studio") {
-    reverbDelay.delayTime.value = 0.06;
-    reverbFeedback.gain.value = 0.25;
-    reverbWet.gain.value = 0.35;
-    reverbDry.gain.value = 0.95;
-  } else if (val === "hall") {
-    reverbDelay.delayTime.value = 0.18;
-    reverbFeedback.gain.value = 0.60;
-    reverbWet.gain.value = 0.50;
-    reverbDry.gain.value = 0.70;
-  } else if (val === "cathedral") {
-    reverbDelay.delayTime.value = 0.32;
-    reverbFeedback.gain.value = 0.75;
-    reverbWet.gain.value = 0.65;
-    reverbDry.gain.value = 0.55;
-  }
-}
-
-// Vinculación de Controles Visuales y DSP
-$("fxBassBoost").addEventListener("input", function(e) {
-  var val = parseFloat(e.target.value);
-  $("fxBassBoostVal").textContent = val + " dB";
-  if (bassFilter) bassFilter.gain.value = val;
-});
-
-function setupEqListener(sliderId, filterId, labelId) {
-  $(sliderId).addEventListener("input", function(e) {
-    var val = parseFloat(e.target.value);
-    $(labelId).textContent = (val > 0 ? "+" : "") + val + "dB";
-    if (eqFilters[filterId]) eqFilters[filterId].gain.value = val;
-  });
-}
-setupEqListener("eq60", "60", "eq60Val");
-setupEqListener("eq230", "230", "eq230Val");
-setupEqListener("eq910", "910", "eq910Val");
-setupEqListener("eq4k", "4k", "eq4kVal");
-setupEqListener("eq14k", "14k", "eq14kVal");
-
-$("fxReverbSelect").addEventListener("change", function(e) {
-  applyReverbSettings(e.target.value);
-});
 
 // --- RENDERIZADO DEL VISUALIZADOR CANVASES ---
 var canvas = $("visualizerCanvas");
