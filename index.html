@@ -262,6 +262,7 @@ label.check input{accent-color:var(--accent)}
 <div class="playlist-head">
   <h2 style="margin:0;">Lista de reproduccion</h2>
   <div style="display:flex;align-items:center;gap:8px;">
+    <button class="btn ghost small" id="resetCatalogBtn" style="padding: 4px 8px; font-size: 11px; margin-right: 4px; display: none; align-items: center; gap: 4px;">Restaurar Cola 🔄</button>
     <label class="check" style="margin-top:0;font-size:12px;color:var(--muted);user-select:none;display:inline-flex;align-items:center;gap:4px;cursor:pointer;">
       <input type="checkbox" id="only2026Toggle" style="margin:0;accent-color:var(--accent);"> Solo 2026 🌟
     </label>
@@ -287,6 +288,43 @@ label.check input{accent-color:var(--accent)}
 <ul class="playlist" id="playlist"><li class="empty">No hay canciones aun. Carga una carpeta para empezar.</li></ul>
 </main>
 <aside class="panel right-aside">
+<div style="margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border);">
+  <h2>Llamados por Voz (TTS) 🎙️</h2>
+  <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+    <textarea id="ttsTextInput" placeholder="Ej: Obed Garcia, por favor ubicarse en la Mesa de produccion 1:5" style="width:100%; height:64px; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); padding:10px; border-radius:10px; font-size:12px; outline:none; font-family:inherit; transition:all .15s; resize:none;"></textarea>
+    
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <select id="ttsVoiceSelect" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); padding:8px; border-radius:8px; font-size:12px; outline:none; color-scheme:dark; font-family:inherit; cursor:pointer; min-width:0;"></select>
+      <button class="btn primary small" id="ttsPlayBtn" style="padding: 8px 12px; display: inline-flex; align-items: center; gap: 6px; flex-shrink:0;">
+        <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor;"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+        <span>Llamar</span>
+      </button>
+    </div>
+    
+    <div style="margin-top: 4px;">
+      <span style="font-size: 10px; color: var(--muted); display: block; margin-bottom: 4px;">Llamados frecuentes:</span>
+      <div id="ttsPresets" style="display: flex; flex-wrap: wrap; gap: 4px;"></div>
+    </div>
+    
+    <details style="margin-top: 4px;">
+      <summary style="font-size: 11px; color: var(--muted); padding: 2px 0;">Ajustes de voz</summary>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px; padding: 6px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);">
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
+          <span>Velocidad: <span id="ttsRateVal">1.0</span></span>
+          <input type="range" id="ttsRate" min="0.5" max="1.8" step="0.1" value="1.0" style="width: 100px; height: 3px; accent-color: var(--accent);">
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
+          <span>Tono: <span id="ttsPitchVal">1.0</span></span>
+          <input type="range" id="ttsPitch" min="0.5" max="1.5" step="0.1" value="1.0" style="width: 100px; height: 3px; accent-color: var(--accent);">
+        </div>
+        <label class="check" style="font-size: 11px; margin-top: 2px; color: var(--muted); cursor:pointer;">
+          <input type="checkbox" id="ttsChimeToggle" checked style="accent-color:var(--accent);"> Sonar timbre de intercom
+        </label>
+      </div>
+    </details>
+  </div>
+</div>
+
 <h2>Audio de ejercicio</h2>
 <div class="file-row">
 <label class="btn primary" for="exerciseInput">Seleccionar audio</label>
@@ -630,6 +668,13 @@ function updatePlayableCount(){
   if(tot)tot.textContent="de "+total;
   var box=$("playCountBox");
   if(box)box.style.opacity=total?"1":"0.5";
+  
+  // Mostrar u ocultar botón de restaurar cola dinámicamente
+  var hasPlayed = state.playlist.some(function(t){return t.played});
+  var resetBtn = $("resetCatalogBtn");
+  if (resetBtn) {
+    resetBtn.style.display = hasPlayed ? "inline-flex" : "none";
+  }
 }
 function isPathAllowed(t) {
   if (!state.onlyNewest2026) return true;
@@ -1213,6 +1258,288 @@ $("only2026Toggle").addEventListener("change", function(e) {
   renderPlaylist();
   renderGenres();
 });
+
+// --- SISTEMA DE LLAMADOS POR VOZ (TTS) ---
+var defaultTtsPresets = [
+  "Obed Garcia, por favor ubicarse en la Mesa de produccion 1:5",
+  "Atencion personal, inicio de pausa ergonomica",
+  "Se solicita asistencia en el area de empaque",
+  "Reunion de supervisores en sala de juntas"
+];
+
+function getSavedTtsPresets() {
+  try {
+    var raw = localStorage.getItem("repro-tts-presets");
+    return raw ? JSON.parse(raw) : defaultTtsPresets;
+  } catch (e) {
+    return defaultTtsPresets;
+  }
+}
+
+function saveTtsPreset(text) {
+  if (!text) return;
+  text = text.trim();
+  var list = getSavedTtsPresets();
+  var idx = list.indexOf(text);
+  if (idx !== -1) {
+    list.splice(idx, 1);
+  }
+  list.unshift(text);
+  if (list.length > 6) list.pop();
+  try {
+    localStorage.setItem("repro-tts-presets", JSON.stringify(list));
+  } catch (e) {}
+  renderTtsPresets();
+}
+
+function renderTtsPresets() {
+  var container = $("ttsPresets");
+  if (!container) return;
+  container.innerHTML = "";
+  var list = getSavedTtsPresets();
+  list.forEach(function(txt) {
+    var badge = document.createElement("button");
+    badge.className = "genre-chip";
+    badge.style.fontSize = "10px";
+    badge.style.padding = "4px 8px";
+    badge.style.whiteSpace = "nowrap";
+    badge.style.overflow = "hidden";
+    badge.style.textOverflow = "ellipsis";
+    badge.style.maxWidth = "120px";
+    
+    var words = txt.split(" ");
+    var label = words.slice(0, 3).join(" ") + (words.length > 3 ? "..." : "");
+    badge.textContent = label;
+    badge.title = txt;
+    
+    badge.addEventListener("click", function() {
+      $("ttsTextInput").value = txt;
+    });
+    container.appendChild(badge);
+  });
+}
+
+function populateVoices() {
+  if (typeof speechSynthesis === 'undefined') return;
+  var voices = speechSynthesis.getVoices();
+  var select = $("ttsVoiceSelect");
+  if (!select) return;
+  
+  var esVoices = voices.filter(function(v) {
+    return v.lang.toLowerCase().startsWith("es");
+  });
+  
+  if (esVoices.length === 0) {
+    esVoices = voices;
+  }
+  
+  select.innerHTML = "";
+  if (esVoices.length === 0) {
+    var opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "Sin voces disponibles";
+    select.appendChild(opt);
+    return;
+  }
+  
+  esVoices.sort(function(a, b) {
+    var aName = a.name.toLowerCase();
+    var bName = b.name.toLowerCase();
+    var aScore = 0, bScore = 0;
+    if (aName.indexOf("natural") !== -1) aScore += 10;
+    if (aName.indexOf("google") !== -1) aScore += 5;
+    if (aName.indexOf("microsoft") !== -1) aScore += 3;
+    if (bName.indexOf("natural") !== -1) bScore += 10;
+    if (bName.indexOf("google") !== -1) bScore += 5;
+    if (bName.indexOf("microsoft") !== -1) bScore += 3;
+    return bScore - aScore;
+  });
+  
+  esVoices.forEach(function(v) {
+    var opt = document.createElement("option");
+    opt.value = v.name;
+    var display = v.name + " (" + v.lang + ")";
+    if (v.localService) display += " 💻";
+    opt.textContent = display;
+    select.appendChild(opt);
+  });
+  
+  if (select.value === "" && select.options.length > 0) {
+    select.selectedIndex = 0;
+  }
+}
+
+if (typeof speechSynthesis !== 'undefined') {
+  speechSynthesis.onvoiceschanged = populateVoices;
+  populateVoices();
+}
+
+function playIntercomChime(callback) {
+  var AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) {
+    if (callback) callback();
+    return;
+  }
+  try {
+    var ctx = new AudioContext();
+    var now = ctx.currentTime;
+    
+    var notes = [
+      { freq: 783.99, time: now },
+      { freq: 1046.50, time: now + 0.22 },
+      { freq: 1318.51, time: now + 0.44 }
+    ];
+    
+    notes.forEach(function(note) {
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(note.freq, note.time);
+      
+      gain.gain.setValueAtTime(0, note.time);
+      gain.gain.linearRampToValueAtTime(0.20, note.time + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, note.time + 0.6);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.start(note.time);
+      osc.stop(note.time + 0.65);
+    });
+    
+    setTimeout(function() {
+      ctx.close();
+      if (callback) callback();
+    }, 1100);
+  } catch (err) {
+    console.error("AudioContext error:", err);
+    if (callback) callback();
+  }
+}
+
+function fadeVolume(audioEl, targetVol, durationMs, onDone) {
+  var startVol = audioEl.volume;
+  var diff = targetVol - startVol;
+  var steps = 15;
+  var interval = durationMs / steps;
+  var stepCount = 0;
+  
+  var timer = setInterval(function() {
+    stepCount++;
+    var currentVol = startVol + (diff * (stepCount / steps));
+    currentVol = Math.max(0, Math.min(1, currentVol));
+    audioEl.volume = currentVol;
+    
+    $("volume").value = Math.round(currentVol * 100);
+    $("volLabel").textContent = Math.round(currentVol * 100);
+    
+    if (stepCount >= steps) {
+      clearInterval(timer);
+      audioEl.volume = targetVol;
+      $("volume").value = Math.round(targetVol * 100);
+      $("volLabel").textContent = Math.round(targetVol * 100);
+      if (onDone) onDone();
+    }
+  }, interval);
+}
+
+function speakAnnouncement(text) {
+  if (typeof speechSynthesis === 'undefined') {
+    toast("Sintetizador de voz no soportado en este navegador");
+    return;
+  }
+  
+  speechSynthesis.cancel();
+  
+  var utter = new SpeechSynthesisUtterance(text);
+  var voices = speechSynthesis.getVoices();
+  var select = $("ttsVoiceSelect");
+  var selectedVoiceName = select ? select.value : "";
+  var selectedVoice = voices.find(function(v) { return v.name === selectedVoiceName; });
+  
+  if (selectedVoice) {
+    utter.voice = selectedVoice;
+    utter.lang = selectedVoice.lang;
+  } else {
+    var esVoice = voices.find(function(v) { return v.lang.toLowerCase().startsWith("es"); });
+    if (esVoice) {
+      utter.voice = esVoice;
+      utter.lang = esVoice.lang;
+    }
+  }
+  
+  utter.rate = parseFloat($("ttsRate").value);
+  utter.pitch = parseFloat($("ttsPitch").value);
+  
+  var originalVolume = musicPlayer.volume;
+  var isMusicPlaying = !musicPlayer.paused && state.isPlayingMusic;
+  var hasChime = $("ttsChimeToggle").checked;
+  
+  function triggerSpeech() {
+    speechSynthesis.speak(utter);
+  }
+  
+  utter.onend = function() {
+    if (isMusicPlaying) {
+      fadeVolume(musicPlayer, originalVolume, 500);
+    }
+  };
+  
+  utter.onerror = function() {
+    if (isMusicPlaying) {
+      fadeVolume(musicPlayer, originalVolume, 500);
+    }
+  };
+  
+  if (isMusicPlaying) {
+    fadeVolume(musicPlayer, 0.05, 300, function() {
+      if (hasChime) {
+        playIntercomChime(triggerSpeech);
+      } else {
+        triggerSpeech();
+      }
+    });
+  } else {
+    if (hasChime) {
+      playIntercomChime(triggerSpeech);
+    } else {
+      triggerSpeech();
+    }
+  }
+}
+
+$("ttsRate").addEventListener("input", function(e) {
+  $("ttsRateVal").textContent = parseFloat(e.target.value).toFixed(1);
+});
+$("ttsPitch").addEventListener("input", function(e) {
+  $("ttsPitchVal").textContent = parseFloat(e.target.value).toFixed(1);
+});
+
+$("ttsPlayBtn").addEventListener("click", function() {
+  var text = $("ttsTextInput").value.trim();
+  if (!text) {
+    toast("Por favor escribe un mensaje de llamado primero");
+    return;
+  }
+  speakAnnouncement(text);
+  saveTtsPreset(text);
+});
+
+$("resetCatalogBtn").addEventListener("click", function() {
+  var count = 0;
+  for (var i = 0; i < state.playlist.length; i++) {
+    if (state.playlist[i].played) {
+      state.playlist[i].played = false;
+      count++;
+    }
+  }
+  renderPlaylist();
+  renderGenres();
+  toast("Se restauraron " + count + " canciones al catálogo 🔄");
+});
+
+renderTtsPresets();
 
 loadSettings();
 renderSchedules();
