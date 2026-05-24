@@ -644,6 +644,7 @@ function isPathAllowed(t) {
   return false;
 }
 function matchesSearch(t,q){
+  if(t.played)return false;
   if(!isGenreAllowed(t))return false;
   if(!isPathAllowed(t))return false;
   if(!q)return true;
@@ -655,6 +656,7 @@ function matchesSearch(t,q){
 function collectGenres(){
   var map={};
   for(var i=0;i<state.playlist.length;i++){
+    if(state.playlist[i].played)continue;
     if(!isPathAllowed(state.playlist[i]))continue;
     var arts=trackArtists(state.playlist[i]);
     for(var j=0;j<arts.length;j++){
@@ -836,6 +838,12 @@ function playIndex(i,attempts){
   attempts=attempts||0;
   if(i<0||i>=state.playlist.length)return;
   if(attempts>=state.playlist.length){toast("No se pudo reproducir ninguna cancion");return}
+  
+  // Marcar la canción anterior como escuchada/consumida para quitarla de la lista
+  if (state.current !== -1 && state.current !== i && state.playlist[state.current]) {
+    state.playlist[state.current].played = true;
+  }
+  
   state.current=i;var t=state.playlist[i];
   musicPlayer.src=t.url;
   renderPlaylist();updateNowPlaying();
@@ -887,7 +895,22 @@ function getAllowedIndices(){
 function nextTrack(){
   if(!state.playlist.length)return;
   var allowed=getAllowedIndices();
-  if(!allowed.length){toast("Ningun genero seleccionado para reproducir");return}
+  if(!allowed.length){
+    // Si hay canciones pero todas se han reproducido, reiniciar de forma inteligente
+    var hasPlayedSongs = state.playlist.some(function(t){return t.played});
+    if (hasPlayedSongs) {
+      toast("¡Has completado tu cola! Reiniciando catálogo...");
+      for (var i = 0; i < state.playlist.length; i++) {
+        state.playlist[i].played = false;
+      }
+      renderPlaylist();
+      renderGenres();
+      allowed = getAllowedIndices();
+    } else {
+      toast("Ninguna canción disponible para reproducir");
+      return;
+    }
+  }
   var n;
   if(state.shuffle){
     n=allowed[Math.floor(Math.random()*allowed.length)];
@@ -913,7 +936,18 @@ $("shuffleBtn").addEventListener("click",function(){state.shuffle=!state.shuffle
 $("repeatBtn").addEventListener("click",function(){state.repeat=!state.repeat;updateRepeatBtn();saveSettings()});
 function updateShuffleBtn(){$("shuffleBtn").classList.toggle("active",state.shuffle)}
 function updateRepeatBtn(){$("repeatBtn").classList.toggle("active",state.repeat)}
-musicPlayer.addEventListener("ended",function(){if(state.repeat){musicPlayer.currentTime=0;musicPlayer.play()}else nextTrack()});
+musicPlayer.addEventListener("ended",function(){
+  if(state.repeat){
+    musicPlayer.currentTime=0;
+    musicPlayer.play();
+  } else {
+    // Marcar la canción actual como escuchada cuando termine naturalmente
+    if (state.current !== -1 && state.playlist[state.current]) {
+      state.playlist[state.current].played = true;
+    }
+    nextTrack();
+  }
+});
 musicPlayer.addEventListener("timeupdate",function(){
   if(!musicPlayer.duration)return;
   var pct=(musicPlayer.currentTime/musicPlayer.duration)*100;
