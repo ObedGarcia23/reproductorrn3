@@ -232,7 +232,12 @@ label.check input{accent-color:var(--accent)}
 </div>
 <div class="player-info">
 <div class="track-label">Reproduciendo ahora</div>
-<div class="track-title" id="trackTitle">Sin cancion seleccionada</div>
+<div style="display: flex; align-items: center; justify-content: space-between; min-width: 0; margin-bottom: 4px;">
+  <div class="track-title" id="trackTitle" style="flex: 1; margin-bottom: 0;">Sin cancion seleccionada</div>
+  <button class="pl-edit-btn" id="deleteTrackBtn" title="Eliminar cancion permanentemente del disco" style="margin-left: 12px; display: none; background: rgba(255, 107, 138, 0.12); border: 1px solid var(--danger); border-radius: 8px; width: 32px; height: 32px; align-items: center; justify-content: center; padding: 0; cursor: pointer; flex-shrink: 0; transition: all 0.15s;">
+    <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; fill: var(--danger);"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+  </button>
+</div>
 <div class="track-artist" id="trackArtist">Carga una carpeta de musica para empezar</div>
 <div class="progress-block">
 <div class="times"><span id="curTime">0:00</span><span id="durTime">0:00</span></div>
@@ -772,8 +777,16 @@ function applyTrackToUI(t){
 }
 function updateNowPlaying(){
   var t=state.playlist[state.current];
-  if(!t){$("trackTitle").textContent="Sin cancion seleccionada";$("trackArtist").textContent=state.playlist.length?"Pulsa play para empezar":"Carga una carpeta de musica para empezar";resetCover();setPlayIcon(false);return}
-  applyTrackToUI(t)
+  if(!t){
+    $("trackTitle").textContent="Sin cancion seleccionada";
+    $("trackArtist").textContent=state.playlist.length?"Pulsa play para empezar":"Carga una carpeta de musica para empezar";
+    resetCover();
+    setPlayIcon(false);
+    $("deleteTrackBtn").style.display = "none";
+    return;
+  }
+  applyTrackToUI(t);
+  $("deleteTrackBtn").style.display = "flex";
 }
 function setPlayIcon(p){var i=$("playIcon");i.innerHTML=p?'<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>':'<path d="M8 5v14l11-7z"/>'}
 async function fetchAndExtractRemoteCover(t, i) {
@@ -998,7 +1011,8 @@ async function connectToPrivateCloud(serverUrl) {
         artists: splitArtists(s.artist),
         genre: "",
         cover: s.cover ? `${serverUrl}/music/${encodeURIComponent(s.cover)}` : null,
-        metaLoaded: true
+        metaLoaded: true,
+        cloudPath: s.path
       };
     });
     
@@ -1031,6 +1045,112 @@ $("serverUrlInput").addEventListener("keydown", function(e) {
     connectToPrivateCloud(url);
   }
 });
+
+async function deleteCurrentTrack() {
+  if (state.current === -1) return;
+  const idx = state.current;
+  const t = state.playlist[idx];
+  if (!t) return;
+  
+  const confirmMsg = `¿Estás seguro de que deseas eliminar permanentemente la canción "${t.title}" del disco duro?\nEsta acción es irreversible.`;
+  if (!confirm(confirmMsg)) return;
+  
+  // Caso A: Música en la Nube Privada (Server)
+  if (!t.file && t.url.startsWith("http") && t.cloudPath) {
+    try {
+      const serverUrl = localStorage.getItem("repro-cloud-server-url");
+      if (!serverUrl) {
+        toast("Error: No se encontró la URL de la nube");
+        return;
+      }
+      
+      const response = await fetch(`${serverUrl}/delete-song`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: t.cloudPath })
+      });
+      
+      const resData = await response.json();
+      if (!response.ok || !resData.success) {
+        throw new Error(resData.error || "Error al eliminar el archivo");
+      }
+      
+      toast("Canción eliminada del disco duro con éxito");
+      musicPlayer.pause();
+      state.playlist.splice(idx, 1);
+      
+      if (state.playlist.length === 0) {
+        state.current = -1;
+        resetCover();
+        updateNowPlaying();
+      } else {
+        var allowed = getAllowedIndices();
+        if (allowed.length > 0) {
+          var nextIdx = allowed[0];
+          for (var j = 0; j < allowed.length; j++) {
+            if (allowed[j] >= idx) {
+              nextIdx = allowed[j];
+              break;
+            }
+          }
+          if (nextIdx >= state.playlist.length) {
+            nextIdx = allowed[0];
+          }
+          state.current = nextIdx;
+          playIndex(nextIdx);
+        } else {
+          state.current = -1;
+          resetCover();
+          updateNowPlaying();
+        }
+      }
+      
+      renderPlaylist();
+      renderGenres();
+      
+    } catch (e) {
+      console.error(e);
+      toast(`Error al eliminar: ${e.message}`);
+    }
+  } else {
+    // Caso B: Música cargada localmente al navegador (file input)
+    toast("Modo local: Removida de la lista (no se puede borrar del disco por seguridad del navegador)");
+    
+    musicPlayer.pause();
+    state.playlist.splice(idx, 1);
+    
+    if (state.playlist.length === 0) {
+      state.current = -1;
+      resetCover();
+      updateNowPlaying();
+    } else {
+      var allowed = getAllowedIndices();
+      if (allowed.length > 0) {
+        var nextIdx = allowed[0];
+        for (var j = 0; j < allowed.length; j++) {
+          if (allowed[j] >= idx) {
+            nextIdx = allowed[j];
+            break;
+          }
+        }
+        if (nextIdx >= state.playlist.length) {
+          nextIdx = allowed[0];
+        }
+        state.current = nextIdx;
+        playIndex(nextIdx);
+      } else {
+        state.current = -1;
+        resetCover();
+        updateNowPlaying();
+      }
+    }
+    
+    renderPlaylist();
+    renderGenres();
+  }
+}
+
+$("deleteTrackBtn").addEventListener("click", deleteCurrentTrack);
 
 loadSettings();
 renderSchedules();

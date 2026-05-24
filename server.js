@@ -70,7 +70,7 @@ function scanMusic(dir, baseDir = dir) {
 const server = http.createServer((req, res) => {
   // Habilitar CORS para que tu app desplegada en internet acceda sin problemas
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
   
   if (req.method === 'OPTIONS') {
@@ -80,6 +80,50 @@ const server = http.createServer((req, res) => {
   }
 
   const url = new URL(req.url, `http://${req.headers.host}`);
+
+  // Endpoint para eliminar canciones físicamente del disco
+  if (req.method === 'POST' && url.pathname === '/delete-song') {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        const relativePath = data.path;
+        if (!relativePath) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Ruta no especificada' }));
+          return;
+        }
+        
+        const filePath = path.join(MUSIC_DIR, relativePath);
+        const resolvedPath = path.resolve(filePath);
+        const resolvedBase = path.resolve(MUSIC_DIR);
+        
+        if (!resolvedPath.startsWith(resolvedBase)) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Acceso denegado' }));
+          return;
+        }
+        
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log(`[ELIMINADO] Canción borrada físicamente: ${filePath}`);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+        } else {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Archivo no encontrado' }));
+        }
+      } catch (e) {
+        console.error("Error al eliminar archivo:", e);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Error del servidor al eliminar el archivo' }));
+      }
+    });
+    return;
+  }
   
   // Endpoint para listar canciones en formato JSON
   if (url.pathname === '/songs') {
