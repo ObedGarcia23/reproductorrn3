@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reproductor + Pausas Ergonomicas</title>
+<title>Gildan MP3</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%237c5cff'/%3E%3Cstop offset='100%25' stop-color='%235b8cff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M18 8v10.55A4 4 0 1 1 16 15V10h4V8h-6z' fill='%23ffffff'/%3E%3C/svg%3E">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#0a0d14;--panel:rgba(20,24,34,0.7);--panel-solid:#181c28;--border:rgba(255,255,255,0.08);--accent:#7c5cff;--accent-2:#5b8cff;--text:#f1f3f8;--muted:#8c93a8;--danger:#ff6b8a;--ok:#4ade80;--warn:#fbbf24;--bg-r:30;--bg-g:30;--bg-b:60}
@@ -267,7 +268,7 @@ label.check input{accent-color:var(--accent)}
 <header class="topbar">
 <div class="brand">
 <div class="dot"><svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg></div>
-<span>Reproductor + Pausas Ergonomicas</span>
+<span>Gildan MP3</span>
 </div>
 <div class="topbar-info">
 <div id="nextExercise">Sin horarios programados</div>
@@ -324,6 +325,7 @@ label.check input{accent-color:var(--accent)}
 </div>
 <div class="track-artist" id="trackArtist">Carga una carpeta de musica para empezar</div>
 <div class="progress-block">
+<canvas id="visualizerCanvas" style="width:100%; height:26px; display:block; margin-bottom:6px; border-radius:6px; background:rgba(0,0,0,0.12); border:1px solid rgba(255,255,255,0.01);"></canvas>
 <div class="times"><span id="curTime">0:00</span><span id="durTime">0:00</span></div>
 <input type="range" class="progress" id="progress" min="0" max="100" value="0">
 <div class="controls">
@@ -370,6 +372,78 @@ label.check input{accent-color:var(--accent)}
 <input type="text" id="serverUrlInput" placeholder="URL de tu Nube Privada (ej: http://localhost:3000)" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:10px;font-size:12px;outline:none;font-family:inherit;transition:all .15s;">
 <button class="btn primary small" id="connectServerBtn" style="padding:6px 12px;">Conectar Nube</button>
 </div>
+
+<!-- LABORATORIO DSP DE AUDIO -->
+<details class="genres-panel" style="margin-bottom: 14px;">
+  <summary style="font-weight:600; font-size:12px; display:flex; align-items:center; gap:6px;">
+    Laboratorio de Audio y Efectos 🎛️
+    <span class="pill" style="background: rgba(124,92,255,0.15); color: var(--accent);">PRO</span>
+  </summary>
+  
+  <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);">
+    
+    <!-- Bass Boost & Reverb -->
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 140px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); padding: 8px 10px; border-radius: 8px;">
+        <span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 6px;">Super Bass Boost 🔥</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input type="range" id="fxBassBoost" min="0" max="15" step="0.5" value="0" style="flex: 1; height: 3px; accent-color: var(--accent);">
+          <span id="fxBassBoostVal" class="pill" style="font-size: 10px; min-width: 32px; text-align: center;">0 dB</span>
+        </div>
+      </div>
+      
+      <div style="flex: 1; min-width: 140px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); padding: 8px 10px; border-radius: 8px;">
+        <span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;">Ambiente Espacial 3D 🏛️</span>
+        <select id="fxReverbSelect" style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text); padding: 5px; border-radius: 6px; font-size: 11px; outline: none; cursor: pointer; color-scheme: dark; font-family: inherit;">
+          <option value="none">Normal 🎧 (Estéreo Estándar)</option>
+          <option value="studio">Estudio 🎙️ (Sala Acústica)</option>
+          <option value="hall">Sala de Conciertos 🏛️ (Gran Eco)</option>
+          <option value="cathedral">Catedral ⛪ (Reverberación Infinita)</option>
+        </select>
+      </div>
+    </div>
+    
+    <!-- 5-Band Graphic Equalizer -->
+    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); padding: 10px; border-radius: 8px;">
+      <span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 10px; font-weight: 500;">Ecualizador Gráfico Profesional</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; height: 100px; padding: 0 10px;">
+        
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%;">
+          <input type="range" class="eq-slider" id="eq60" min="-10" max="10" step="0.5" value="0" orient="vertical" style="-webkit-appearance: slider-vertical; width: 8px; height: 60px; accent-color: var(--accent);">
+          <span style="font-size: 9px; color: var(--muted);">60Hz</span>
+          <span id="eq60Val" style="font-size: 8px; color: var(--accent);">0dB</span>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%;">
+          <input type="range" class="eq-slider" id="eq230" min="-10" max="10" step="0.5" value="0" orient="vertical" style="-webkit-appearance: slider-vertical; width: 8px; height: 60px; accent-color: var(--accent);">
+          <span style="font-size: 9px; color: var(--muted);">230Hz</span>
+          <span id="eq230Val" style="font-size: 8px; color: var(--accent);">0dB</span>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%;">
+          <input type="range" class="eq-slider" id="eq910" min="-10" max="10" step="0.5" value="0" orient="vertical" style="-webkit-appearance: slider-vertical; width: 8px; height: 60px; accent-color: var(--accent);">
+          <span style="font-size: 9px; color: var(--muted);">910Hz</span>
+          <span id="eq910Val" style="font-size: 8px; color: var(--accent);">0dB</span>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%;">
+          <input type="range" class="eq-slider" id="eq4k" min="-10" max="10" step="0.5" value="0" orient="vertical" style="-webkit-appearance: slider-vertical; width: 8px; height: 60px; accent-color: var(--accent);">
+          <span style="font-size: 9px; color: var(--muted);">4kHz</span>
+          <span id="eq4kVal" style="font-size: 8px; color: var(--accent);">0dB</span>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%;">
+          <input type="range" class="eq-slider" id="eq14k" min="-10" max="10" step="0.5" value="0" orient="vertical" style="-webkit-appearance: slider-vertical; width: 8px; height: 60px; accent-color: var(--accent);">
+          <span style="font-size: 9px; color: var(--muted);">14kHz</span>
+          <span id="eq14kVal" style="font-size: 8px; color: var(--accent);">0dB</span>
+        </div>
+        
+      </div>
+    </div>
+    
+  </div>
+</details>
+
 <ul class="playlist" id="playlist"><li class="empty">No hay canciones aun. Carga una carpeta para empezar.</li></ul>
 </main>
 <aside class="panel right-aside">
@@ -475,7 +549,7 @@ label.check input{accent-color:var(--accent)}
 </div>
 </div>
 <div class="toast" id="toast"></div>
-<audio id="musicPlayer" preload="metadata"></audio>
+<audio id="musicPlayer" preload="metadata" crossorigin="anonymous"></audio>
 <audio id="exercisePlayer"></audio>
 <script>
 "use strict";
@@ -996,6 +1070,10 @@ function playIndex(i,attempts){
   }
   
   state.current=i;var t=state.playlist[i];
+  initAudioDsp();
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
   musicPlayer.src=t.url;
   renderPlaylist();updateNowPlaying();
   fetchAndExtractRemoteCover(t, i);
@@ -2035,6 +2113,199 @@ $("dedupeBtn").addEventListener("click", async function() {
     }
   }
 });
+
+// --- LABORATORIO DSP DE AUDIO (ECUALIZADOR GRÁFICO, BASS BOOST Y REVERB) ---
+var audioCtx = null;
+var analyser = null;
+var dataArray = null;
+var bassFilter = null;
+var eqFilters = {};
+var reverbWet = null;
+var reverbDry = null;
+var reverbDelay = null;
+var reverbFeedback = null;
+
+function initAudioDsp() {
+  if (audioCtx) return;
+  
+  var AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) return;
+  
+  try {
+    audioCtx = new AudioContext();
+    var source = audioCtx.createMediaElementSource(musicPlayer);
+    
+    // Analizador de Frecuencia
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 64; // Compact neon waves
+    var bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
+    
+    // Bass Boost
+    bassFilter = audioCtx.createBiquadFilter();
+    bassFilter.type = "lowshelf";
+    bassFilter.frequency.value = 150;
+    bassFilter.gain.value = parseFloat($("fxBassBoost").value);
+    
+    // Ecualizador de 5 Bandas
+    var eqBands = [
+      { id: "60", freq: 60, el: $("eq60") },
+      { id: "230", freq: 230, el: $("eq230") },
+      { id: "910", freq: 910, el: $("eq910") },
+      { id: "4k", freq: 4000, el: $("eq4k") },
+      { id: "14k", freq: 14000, el: $("eq14k") }
+    ];
+    
+    var lastNode = bassFilter;
+    
+    eqBands.forEach(function(band) {
+      var filter = audioCtx.createBiquadFilter();
+      filter.type = "peaking";
+      filter.frequency.value = band.freq;
+      filter.Q.value = 1.0;
+      filter.gain.value = parseFloat(band.el.value);
+      eqFilters[band.id] = filter;
+      
+      lastNode.connect(filter);
+      lastNode = filter;
+    });
+    
+    lastNode.connect(analyser);
+    
+    // Reverberador Comb-Filter Espacial
+    reverbDelay = audioCtx.createDelay(1.0);
+    reverbFeedback = audioCtx.createGain();
+    var reverbFilter = audioCtx.createBiquadFilter();
+    reverbWet = audioCtx.createGain();
+    reverbDry = audioCtx.createGain();
+    
+    reverbDelay.delayTime.value = 0.15;
+    reverbFeedback.gain.value = 0.5;
+    reverbFilter.frequency.value = 1500;
+    
+    reverbDelay.connect(reverbFilter);
+    reverbFilter.connect(reverbFeedback);
+    reverbFeedback.connect(reverbDelay);
+    
+    var splitter = audioCtx.createGain();
+    analyser.connect(splitter);
+    
+    splitter.connect(reverbDry);
+    splitter.connect(reverbDelay);
+    reverbDelay.connect(reverbWet);
+    
+    reverbDry.connect(audioCtx.destination);
+    reverbWet.connect(audioCtx.destination);
+    
+    applyReverbSettings($("fxReverbSelect").value);
+    source.connect(bassFilter);
+    
+  } catch (e) {
+    console.error("AudioContext DSP error:", e);
+  }
+}
+
+function applyReverbSettings(val) {
+  if (!reverbWet || !reverbDry || !reverbDelay || !reverbFeedback) return;
+  
+  if (val === "none") {
+    reverbWet.gain.value = 0.0;
+    reverbDry.gain.value = 1.0;
+  } else if (val === "studio") {
+    reverbDelay.delayTime.value = 0.06;
+    reverbFeedback.gain.value = 0.25;
+    reverbWet.gain.value = 0.35;
+    reverbDry.gain.value = 0.95;
+  } else if (val === "hall") {
+    reverbDelay.delayTime.value = 0.18;
+    reverbFeedback.gain.value = 0.60;
+    reverbWet.gain.value = 0.50;
+    reverbDry.gain.value = 0.70;
+  } else if (val === "cathedral") {
+    reverbDelay.delayTime.value = 0.32;
+    reverbFeedback.gain.value = 0.75;
+    reverbWet.gain.value = 0.65;
+    reverbDry.gain.value = 0.55;
+  }
+}
+
+// Vinculación de Controles Visuales y DSP
+$("fxBassBoost").addEventListener("input", function(e) {
+  var val = parseFloat(e.target.value);
+  $("fxBassBoostVal").textContent = val + " dB";
+  if (bassFilter) bassFilter.gain.value = val;
+});
+
+function setupEqListener(sliderId, filterId, labelId) {
+  $(sliderId).addEventListener("input", function(e) {
+    var val = parseFloat(e.target.value);
+    $(labelId).textContent = (val > 0 ? "+" : "") + val + "dB";
+    if (eqFilters[filterId]) eqFilters[filterId].gain.value = val;
+  });
+}
+setupEqListener("eq60", "60", "eq60Val");
+setupEqListener("eq230", "230", "eq230Val");
+setupEqListener("eq910", "910", "eq910Val");
+setupEqListener("eq4k", "4k", "eq4kVal");
+setupEqListener("eq14k", "14k", "eq14kVal");
+
+$("fxReverbSelect").addEventListener("change", function(e) {
+  applyReverbSettings(e.target.value);
+});
+
+// --- RENDERIZADO DEL VISUALIZADOR CANVASES ---
+var canvas = $("visualizerCanvas");
+var ctx = canvas.getContext("2d");
+
+function drawVisualizer() {
+  requestAnimationFrame(drawVisualizer);
+  
+  if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+  }
+  
+  var width = canvas.width;
+  var height = canvas.height;
+  
+  if (!analyser || !dataArray) {
+    ctx.clearRect(0, 0, width, height);
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(124, 92, 255, 0.2)";
+    ctx.lineWidth = 1;
+    ctx.moveTo(0, height / 2);
+    ctx.lineTo(width, height / 2);
+    ctx.stroke();
+    return;
+  }
+  
+  analyser.getByteFrequencyData(dataArray);
+  ctx.clearRect(0, 0, width, height);
+  
+  var bufferLength = analyser.frequencyBinCount;
+  var barWidth = (width / bufferLength) * 1.6;
+  var barHeight;
+  var x = 0;
+  
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = "#7c5cff";
+  
+  var grad = ctx.createLinearGradient(0, height, 0, 0);
+  grad.addColorStop(0, "rgba(124, 92, 255, 0.25)");
+  grad.addColorStop(0.5, "rgba(91, 140, 255, 0.65)");
+  grad.addColorStop(1, "rgba(124, 92, 255, 0.95)");
+  
+  for (var i = 0; i < bufferLength; i++) {
+    barHeight = (dataArray[i] / 255) * height * 0.92;
+    ctx.fillStyle = grad;
+    
+    // Draw smooth soundwave neon bars
+    ctx.fillRect(x, height - barHeight, barWidth - 1.5, barHeight);
+    x += barWidth;
+  }
+  ctx.shadowBlur = 0;
+}
+drawVisualizer();
 
 renderTtsPresets();
 
