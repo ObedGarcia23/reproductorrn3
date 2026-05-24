@@ -259,7 +259,15 @@ label.check input{accent-color:var(--accent)}
 </div>
 </div>
 </div>
-<div class="playlist-head"><h2 style="margin:0;">Lista de reproduccion</h2><span class="pill" id="countTag">0 canciones</span></div>
+<div class="playlist-head">
+  <h2 style="margin:0;">Lista de reproduccion</h2>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <label class="check" style="margin-top:0;font-size:12px;color:var(--muted);user-select:none;display:inline-flex;align-items:center;gap:4px;cursor:pointer;">
+      <input type="checkbox" id="only2026Toggle" style="margin:0;accent-color:var(--accent);"> Solo 2026 🌟
+    </label>
+    <span class="pill" id="countTag">0 canciones</span>
+  </div>
+</div>
 <div class="search-row">
 <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
 <input type="text" id="searchInput" placeholder="Buscar cancion o artista..." autocomplete="off">
@@ -327,7 +335,7 @@ label.check input{accent-color:var(--accent)}
 <audio id="exercisePlayer"></audio>
 <script>
 "use strict";
-var state={playlist:[],current:-1,shuffle:!1,repeat:!1,isPlayingMusic:!1,exerciseUrl:null,exerciseName:"",schedules:[],exerciseRunning:!1,resumeAfter:!1,failedIndices:{},searchQuery:"",selectedGenres:null,disabledGenres:{}};
+var state={playlist:[],current:-1,shuffle:!1,repeat:!1,isPlayingMusic:!1,exerciseUrl:null,exerciseName:"",schedules:[],exerciseRunning:!1,resumeAfter:!1,failedIndices:{},searchQuery:"",selectedGenres:null,disabledGenres:{},onlyNewest2026:!1};
 var ID3GENRES="Blues,Classic Rock,Country,Dance,Disco,Funk,Grunge,Hip-Hop,Jazz,Metal,New Age,Oldies,Other,Pop,R&B,Rap,Reggae,Rock,Techno,Industrial,Alternative,Ska,Death Metal,Pranks,Soundtrack,Euro-Techno,Ambient,Trip-Hop,Vocal,Jazz+Funk,Fusion,Trance,Classical,Instrumental,Acid,House,Game,Sound Clip,Gospel,Noise,AlternRock,Bass,Soul,Punk,Space,Meditative,Instrumental Pop,Instrumental Rock,Ethnic,Gothic,Darkwave,Techno-Industrial,Electronic,Pop-Folk,Eurodance,Dream,Southern Rock,Comedy,Cult,Gangsta,Top 40,Christian Rap,Pop/Funk,Jungle,Native American,Cabaret,New Wave,Psychadelic,Rave,Showtunes,Trailer,Lo-Fi,Tribal,Acid Punk,Acid Jazz,Polka,Retro,Musical,Rock & Roll,Hard Rock,Folk,Folk-Rock,National Folk,Swing,Fast Fusion,Bebop,Latin,Revival,Celtic,Bluegrass,Avantgarde,Gothic Rock,Progressive Rock,Psychedelic Rock,Symphonic Rock,Slow Rock,Big Band,Chorus,Easy Listening,Acoustic,Humour,Speech,Chanson,Opera,Chamber Music,Sonata,Symphony,Booty Bass,Primus,Porn Groove,Satire,Slow Jam,Club,Tango,Samba,Folklore,Ballad,Power Ballad,Rhythmic Soul,Freestyle,Duet,Punk Rock,Drum Solo,A capella,Euro-House,Dance Hall".split(",");
 function parseGenre(raw){
   if(!raw)return"";
@@ -623,8 +631,21 @@ function updatePlayableCount(){
   var box=$("playCountBox");
   if(box)box.style.opacity=total?"1":"0.5";
 }
+function isPathAllowed(t) {
+  if (!state.onlyNewest2026) return true;
+  if (t.cloudPath) {
+    var parts = t.cloudPath.split('/');
+    return parts.indexOf('2026') !== -1;
+  }
+  if (t.file && t.file.webkitRelativePath) {
+    var parts = t.file.webkitRelativePath.split('/');
+    return parts.indexOf('2026') !== -1;
+  }
+  return false;
+}
 function matchesSearch(t,q){
   if(!isGenreAllowed(t))return false;
+  if(!isPathAllowed(t))return false;
   if(!q)return true;
   return (t.title||"").toLowerCase().indexOf(q)!==-1
     || (t.artist||"").toLowerCase().indexOf(q)!==-1
@@ -634,6 +655,7 @@ function matchesSearch(t,q){
 function collectGenres(){
   var map={};
   for(var i=0;i<state.playlist.length;i++){
+    if(!isPathAllowed(state.playlist[i]))continue;
     var arts=trackArtists(state.playlist[i]);
     for(var j=0;j<arts.length;j++){
       map[arts[j]]=(map[arts[j]]||0)+1;
@@ -1151,6 +1173,12 @@ async function deleteCurrentTrack() {
 }
 
 $("deleteTrackBtn").addEventListener("click", deleteCurrentTrack);
+
+$("only2026Toggle").addEventListener("change", function(e) {
+  state.onlyNewest2026 = e.target.checked;
+  renderPlaylist();
+  renderGenres();
+});
 
 loadSettings();
 renderSchedules();
