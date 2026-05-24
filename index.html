@@ -363,6 +363,7 @@ label.check input{accent-color:var(--accent)}
 <input type="file" id="musicInput" webkitdirectory directory multiple>
 <label class="btn ghost" for="filesInput">Anadir archivos locales</label>
 <input type="file" id="filesInput" multiple accept="audio/*">
+<button class="btn ghost small" id="dedupeBtn" title="Buscar y eliminar canciones duplicadas por artista y título">Eliminar Duplicados 👥</button>
 <button class="btn ghost danger small" id="clearListBtn">Vaciar lista</button>
 </div>
 <div class="file-row" style="margin-top:-6px;margin-bottom:14px;display:flex;gap:8px;">
@@ -1257,7 +1258,7 @@ async function connectToPrivateCloud(serverUrl) {
       }
     }
     
-    state.playlist = songs.map(s => {
+    var cloudSongs = songs.map(s => {
       const songUrl = `${serverUrl}/music/${encodeURIComponent(s.path)}`;
       return {
         name: s.title,
@@ -1273,6 +1274,9 @@ async function connectToPrivateCloud(serverUrl) {
       };
     });
     
+    // Filtrar canciones duplicadas automáticamente
+    state.playlist = deduplicatePlaylist(cloudSongs);
+    
     state.current = -1;
     state.failedIndices = {};
     localStorage.setItem("repro-cloud-server-url", serverUrl);
@@ -1280,7 +1284,7 @@ async function connectToPrivateCloud(serverUrl) {
     renderPlaylist();
     renderGenres();
     updateNowPlaying();
-    toast(`${songs.length} canciones cargadas de la nube`);
+    toast(`${state.playlist.length} canciones cargadas de la nube (sin duplicados)`);
   } catch (error) {
     console.error(error);
     toast("Error al conectar con la Nube. Verifica la URL.");
@@ -1896,6 +1900,140 @@ $("resetCatalogBtn").addEventListener("click", function() {
   renderPlaylist();
   renderGenres();
   toast("Se restauraron " + count + " canciones al catálogo 🔄");
+});
+
+// --- DEDUPLICACIÓN DE CANCIONES (MISMO ARTISTA Y NOMBRE) ---
+function deduplicatePlaylist(list) {
+  var seen = {};
+  var out = [];
+  var dupCount = 0;
+  
+  for (var i = 0; i < list.length; i++) {
+    var s = list[i];
+    var titleKey = (s.title || s.name || "").trim().toLowerCase();
+    var artistKey = (s.artist || "").trim().toLowerCase();
+    var key = artistKey + "|||" + titleKey;
+    
+    if (seen[key]) {
+      dupCount++;
+      if (s.file) {
+        URL.revokeObjectURL(s.url);
+      }
+      continue;
+    }
+    seen[key] = true;
+    out.push(s);
+  }
+  
+  if (dupCount > 0) {
+    toast("Se filtraron " + dupCount + " duplicados");
+  }
+  return out;
+}
+
+$("dedupeBtn").addEventListener("click", async function() {
+  if (!state.playlist.length) {
+    toast("No hay canciones en la lista");
+    return;
+  }
+  
+  var seen = {};
+  var duplicates = [];
+  var uniqueSongs = [];
+  
+  for (var i = 0; i < state.playlist.length; i++) {
+    var s = state.playlist[i];
+    var titleKey = (s.title || s.name || "").trim().toLowerCase();
+    var artistKey = (s.artist || "").trim().toLowerCase();
+    var key = artistKey + "|||" + titleKey;
+    
+    if (seen[key]) {
+      duplicates.push({ index: i, track: s });
+    } else {
+      seen[key] = true;
+      uniqueSongs.push(s);
+    }
+  }
+  
+  if (duplicates.length === 0) {
+    toast("No hay canciones duplicadas en tu catálogo");
+    return;
+  }
+  
+  var confirmPhysical = confirm(
+    `Se encontraron ${duplicates.length} canciones duplicadas (mismo artista y título).\n\n` +
+    `¿Deseas ELIMINAR FÍSICAMENTE estos archivos duplicados de tu disco duro local para que no vuelvan a salir?\n\n` +
+    `Presiona ACEPTAR para borrarlos físicamente del disco.\n` +
+    `Presiona CANCELAR para ver opciones de limpieza solo en pantalla.`
+  );
+  
+  if (confirmPhysical) {
+    var deletedCount = 0;
+    var failedCount = 0;
+    var serverUrl = localStorage.getItem("repro-cloud-server-url");
+    
+    toast("Eliminando duplicados del disco duro...");
+    
+    for (var j = 0; j < duplicates.length; j++) {
+      var dup = duplicates[j].track;
+      
+      if (!dup.file && dup.url.startsWith("http") && dup.cloudPath && serverUrl) {
+        try {
+          const response = await fetch(`${serverUrl}/delete-song`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: dup.cloudPath })
+          });
+          const resData = await response.json();
+          if (response.ok && resData.success) {
+            deletedCount++;
+          } else {
+            failedCount++;
+          }
+        } catch (e) {
+          failedCount++;
+          console.error("Error al borrar duplicado:", e);
+        }
+      } else {
+        if (dup.file) {
+          URL.revokeObjectURL(dup.url);
+        }
+        deletedCount++;
+      }
+    }
+    
+    state.playlist = uniqueSongs;
+    
+    if (state.current >= state.playlist.length) {
+      state.current = -1;
+      updateNowPlaying();
+    }
+    
+    renderPlaylist();
+    renderGenres();
+    
+    var msg = `Limpieza completada. Se eliminaron físicamente ${deletedCount} duplicados del disco duro`;
+    if (failedCount > 0) msg += ` (falló la conexión para ${failedCount} archivos)`;
+    toast(msg);
+    
+  } else {
+    var confirmVirtual = confirm(
+      `¿Deseas al menos quitar las ${duplicates.length} canciones duplicadas del listado de la pantalla (sin borrarlas del disco)?`
+    );
+    if (confirmVirtual) {
+      duplicates.forEach(d => {
+        if (d.track.file) URL.revokeObjectURL(d.track.url);
+      });
+      state.playlist = uniqueSongs;
+      if (state.current >= state.playlist.length) {
+        state.current = -1;
+        updateNowPlaying();
+      }
+      renderPlaylist();
+      renderGenres();
+      toast(`Se quitaron ${duplicates.length} canciones duplicadas de la pantalla`);
+    }
+  }
 });
 
 renderTtsPresets();
