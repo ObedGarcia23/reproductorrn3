@@ -2,14 +2,14 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Galaga Arcade - Gildan MP3</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--accent:#7c5cff;--accent-2:#5b8cff;--danger:#ff6b8a;--ok:#4ade80;--warn:#fbbf24;--muted:#8c93a8}
-html,body{height:100%;background:#000;overflow:hidden;font-family:'Courier New',monospace;color:#fff;user-select:none}
-#gameContainer{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;background:#000}
-#canvas{display:block;image-rendering:pixelated;cursor:none}
+html,body{height:100%;background:#000;overflow:hidden;font-family:'Courier New',monospace;color:#fff;user-select:none;-webkit-user-select:none;touch-action:none}
+#gameContainer{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;background:#000;touch-action:none}
+#canvas{display:block;image-rendering:pixelated;cursor:none;touch-action:none}
 #ui{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none}
 #hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:10px 16px;font-size:13px;letter-spacing:1px;background:linear-gradient(to bottom,rgba(0,0,0,0.6),transparent)}
 .hud-block{display:flex;flex-direction:column;gap:2px;min-width:80px}
@@ -20,26 +20,27 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Courier New',
 #livesDisplay{text-align:right}
 #lives-icons{display:flex;gap:4px;justify-content:flex-end;margin-top:2px}
 .life-icon{width:14px;height:14px;fill:var(--accent-2)}
-#powerupBar{position:absolute;bottom:54px;left:50%;transform:translateX(-50%);display:flex;gap:8px;pointer-events:none}
+#powerupBar{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;pointer-events:none}
 .powerup-badge{background:rgba(124,92,255,0.2);border:1px solid var(--accent);color:var(--accent);padding:3px 10px;border-radius:12px;font-size:11px;letter-spacing:1px;animation:fadeIn .3s}
-#msgOverlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
-#msgBox{background:rgba(10,13,20,0.92);border:1px solid rgba(124,92,255,0.5);border-radius:16px;padding:36px 48px;text-align:center;max-width:380px;backdrop-filter:blur(20px);box-shadow:0 0 60px rgba(124,92,255,0.2)}
-#msgBox h1{font-size:32px;font-weight:900;letter-spacing:3px;color:var(--accent);text-shadow:0 0 20px var(--accent);margin-bottom:8px}
-#msgBox .sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+#msgOverlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:all}
+#msgBox{background:rgba(10,13,20,0.92);border:1px solid rgba(124,92,255,0.5);border-radius:16px;padding:28px 32px;text-align:center;max-width:320px;width:88%;backdrop-filter:blur(20px);box-shadow:0 0 60px rgba(124,92,255,0.2)}
+#msgBox h1{font-size:30px;font-weight:900;letter-spacing:3px;color:var(--accent);text-shadow:0 0 20px var(--accent);margin-bottom:8px}
+#msgBox .sub{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.7}
 #msgBox .score-line{font-size:18px;color:var(--warn);font-weight:700;margin-bottom:6px}
 #msgBox .hi-line{font-size:13px;color:var(--muted)}
+.tap-btn{display:inline-block;margin-top:18px;padding:14px 32px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;font-family:'Courier New',monospace;letter-spacing:2px;cursor:pointer;box-shadow:0 4px 20px rgba(124,92,255,0.4);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.tap-btn:active{transform:scale(0.95)}
 .blink-btn{font-size:14px;color:var(--ok);letter-spacing:2px;animation:blink 1s step-end infinite;margin-top:20px}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
-#levelAnnounce{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;font-weight:900;letter-spacing:4px;color:var(--warn);text-shadow:0 0 20px var(--warn);opacity:0;transition:none;pointer-events:none;white-space:nowrap}
-#backBtn{position:absolute;top:10px;left:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--muted);padding:6px 12px;border-radius:8px;font-size:11px;font-family:'Courier New',monospace;cursor:pointer;pointer-events:all;letter-spacing:1px;transition:all .15s;z-index:10}
-#backBtn:hover{color:#fff;background:rgba(255,255,255,0.1)}
-#touchControls{position:absolute;bottom:0;left:0;right:0;height:100px;display:none;pointer-events:all}
-#tcLeft,#tcRight{position:absolute;bottom:0;width:40%;height:100px;display:flex;align-items:center;justify-content:center;font-size:32px;color:rgba(255,255,255,0.15);border-top:1px solid rgba(255,255,255,0.05)}
-#tcLeft{left:0;border-right:1px solid rgba(255,255,255,0.05)}
-#tcRight{right:0}
-#tcFire{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);width:70px;height:70px;border-radius:50%;background:rgba(124,92,255,0.2);border:2px solid rgba(124,92,255,0.4);display:flex;align-items:center;justify-content:center;font-size:22px}
-@media (pointer:coarse){#touchControls{display:block}}
+#levelAnnounce{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:26px;font-weight:900;letter-spacing:4px;color:var(--warn);text-shadow:0 0 20px var(--warn);opacity:0;transition:none;pointer-events:none;white-space:nowrap}
+#backBtn{position:absolute;top:10px;left:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:var(--muted);padding:8px 14px;border-radius:10px;font-size:12px;font-family:'Courier New',monospace;cursor:pointer;pointer-events:all;letter-spacing:1px;transition:all .15s;z-index:10;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+#backBtn:active{color:#fff;background:rgba(255,255,255,0.18)}
+#pauseBtn{position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:var(--muted);width:40px;height:40px;border-radius:10px;font-size:16px;display:none;align-items:center;justify-content:center;cursor:pointer;pointer-events:all;z-index:10;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+#pauseBtn:active{background:rgba(255,255,255,0.2)}
+@media (pointer:coarse){#pauseBtn{display:flex}}
+#touchHint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.2);letter-spacing:1px;pointer-events:none;white-space:nowrap;display:none}
+@media (pointer:coarse){#touchHint{display:block}}
 </style>
 </head>
 <body>
@@ -47,6 +48,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Courier New',
   <canvas id="canvas"></canvas>
   <div id="ui">
     <button id="backBtn" onclick="window.location.href='index.html'">← VOLVER</button>
+    <button id="pauseBtn" onclick="togglePause()">⏸</button>
     <div id="hud">
       <div class="hud-block">
         <span class="hud-label">Puntos</span>
@@ -63,17 +65,13 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Courier New',
     </div>
     <div id="powerupBar"></div>
     <div id="levelAnnounce"></div>
+    <div id="touchHint">✦ DESLIZA PARA MOVER · DISPARO AUTOMÁTICO ✦</div>
     <div id="msgOverlay">
       <div id="msgBox">
         <h1>GALAGA</h1>
-        <div class="sub">Flechas / WASD para mover<br>ESPACIO para disparar<br>P para pausar</div>
-        <div class="blink-btn">PRESIONA ESPACIO PARA INICIAR</div>
+        <div class="sub" id="menuSub">Flechas / WASD para mover<br>ESPACIO para disparar · P pausar</div>
+        <button class="tap-btn" id="startBtn" onclick="handleStart()">▶ INICIAR</button>
       </div>
-    </div>
-    <div id="touchControls">
-      <div id="tcLeft">◀</div>
-      <div id="tcRight">▶</div>
-      <div id="tcFire">🔥</div>
     </div>
   </div>
 </div>
@@ -329,42 +327,101 @@ function updateHUD() {
 
 // ─── Input ────────────────────────────────────────────────────────────────────
 var keys = {};
+var isTouchDevice = false;
+
 window.addEventListener("keydown", function(e) {
   keys[e.code] = true;
   if (e.code === "Space") e.preventDefault();
-  if (e.code === "KeyP" && gameState === STATES.PLAYING) { gameState = STATES.PAUSED; showPause(); }
-  else if (e.code === "KeyP" && gameState === STATES.PAUSED) { gameState = STATES.PLAYING; hidePause(); requestFrame(); }
-  if ((e.code === "Space" || e.code === "Enter") && gameState === STATES.MENU) startGame();
-  if ((e.code === "Space" || e.code === "Enter") && (gameState === STATES.GAME_OVER || gameState === STATES.WIN)) startGame();
+  if (e.code === "KeyP") togglePause();
+  if ((e.code === "Space" || e.code === "Enter") && (gameState === STATES.MENU || gameState === STATES.GAME_OVER || gameState === STATES.WIN)) handleStart();
 });
 window.addEventListener("keyup", function(e) { keys[e.code] = false; });
 
-// Touch controls
-var tcL = false, tcR = false, tcF = false;
-document.getElementById("tcLeft").addEventListener("touchstart", function(e){ tcL=true; e.preventDefault(); }, {passive:false});
-document.getElementById("tcLeft").addEventListener("touchend",  function(){ tcL=false; });
-document.getElementById("tcRight").addEventListener("touchstart",function(e){ tcR=true; e.preventDefault(); }, {passive:false});
-document.getElementById("tcRight").addEventListener("touchend", function(){ tcR=false; });
-document.getElementById("tcFire").addEventListener("touchstart", function(e){ tcF=true; initAC(); e.preventDefault(); }, {passive:false});
-document.getElementById("tcFire").addEventListener("touchend",  function(){ tcF=false; });
+// ─── Touch: barco sigue el dedo, disparo automático ──────────────────────────
+var touchX = null;   // posición X del dedo (en coords canvas)
+var touching = false;
+var canvasRect = { left: 0, top: 0, width: 1, height: 1 };
+
+function updateCanvasRect() {
+  var r = canvas.getBoundingClientRect();
+  canvasRect.left = r.left; canvasRect.top = r.top;
+  canvasRect.width = r.width; canvasRect.height = r.height;
+}
+
+function touchToCanvasX(clientX) {
+  return (clientX - canvasRect.left) / canvasRect.width * W;
+}
+
+function onTouchStart(e) {
+  e.preventDefault();
+  isTouchDevice = true;
+  initAC();
+  updateCanvasRect();
+  if (gameState === STATES.MENU || gameState === STATES.GAME_OVER || gameState === STATES.WIN) {
+    handleStart(); return;
+  }
+  if (gameState === STATES.PAUSED) { togglePause(); return; }
+  if (e.touches.length > 0) {
+    touching = true;
+    touchX = touchToCanvasX(e.touches[0].clientX);
+  }
+}
+function onTouchMove(e) {
+  e.preventDefault();
+  if (e.touches.length > 0) {
+    touching = true;
+    touchX = touchToCanvasX(e.touches[0].clientX);
+  }
+}
+function onTouchEnd(e) {
+  e.preventDefault();
+  if (e.touches.length === 0) { touching = false; touchX = null; }
+  else touchX = touchToCanvasX(e.touches[0].clientX);
+}
+
+document.getElementById("gameContainer").addEventListener("touchstart", onTouchStart, {passive:false});
+document.getElementById("gameContainer").addEventListener("touchmove",  onTouchMove,  {passive:false});
+document.getElementById("gameContainer").addEventListener("touchend",   onTouchEnd,   {passive:false});
+document.getElementById("gameContainer").addEventListener("touchcancel",function(){ touching=false; touchX=null; }, {passive:false});
 
 // ─── UI helpers ───────────────────────────────────────────────────────────────
-function showMsg(html) { var b=document.getElementById("msgBox"); b.innerHTML=html; document.getElementById("msgOverlay").style.display="flex"; }
-function hideMsg() { document.getElementById("msgOverlay").style.display="none"; }
+function showMsg(html) {
+  var b = document.getElementById("msgBox"); b.innerHTML = html;
+  var ov = document.getElementById("msgOverlay"); ov.style.display = "flex";
+}
+function hideMsg() { document.getElementById("msgOverlay").style.display = "none"; }
 function showLevelAnnounce(text, cb) {
   var el = document.getElementById("levelAnnounce");
   el.textContent = text; el.style.opacity = "1";
   setTimeout(function(){ el.style.transition = "opacity 0.6s"; el.style.opacity = "0"; setTimeout(function(){ el.style.transition="none"; if(cb)cb(); }, 650); }, 1200);
 }
-function showPause() { showMsg('<h1>PAUSA</h1><div class="sub">P para continuar</div>'); }
-function hidePause() { hideMsg(); }
+function togglePause() {
+  if (gameState === STATES.PLAYING) {
+    gameState = STATES.PAUSED;
+    document.getElementById("pauseBtn").textContent = "▶";
+    showMsg('<h1>PAUSA</h1><div class="sub">Toca o presiona P para continuar</div><button class="tap-btn" onclick="togglePause()">▶ CONTINUAR</button>');
+  } else if (gameState === STATES.PAUSED) {
+    gameState = STATES.PLAYING;
+    document.getElementById("pauseBtn").textContent = "⏸";
+    hideMsg();
+    lastTime = performance.now();
+    requestFrame();
+  }
+}
+function handleStart() {
+  initAC();
+  if (gameState === STATES.MENU || gameState === STATES.GAME_OVER || gameState === STATES.WIN) {
+    startGame();
+  }
+}
 
 // ─── Start / reset ────────────────────────────────────────────────────────────
 function startGame() {
-  initAC();
   score = 0; lives = 3; level = 1;
   player = createPlayer();
+  touching = false; touchX = null;
   gameState = STATES.PLAYING;
+  document.getElementById("pauseBtn").textContent = "⏸";
   hideMsg();
   initLevel(level);
   showLevelAnnounce("NIVEL 1");
@@ -405,7 +462,7 @@ function killPlayer() {
   if (lives <= 0) {
     gameState = STATES.GAME_OVER;
     setTimeout(function(){
-      showMsg('<h1>GAME OVER</h1><div class="score-line">Puntos: '+score+'</div><div class="hi-line">Record: '+hi+'</div><div class="blink-btn">PRESIONA ESPACIO PARA REINICIAR</div>');
+      showMsg('<h1>GAME OVER</h1><div class="score-line">Puntos: '+score+'</div><div class="hi-line">Record: '+hi+'</div><button class="tap-btn" onclick="handleStart()">↺ REINICIAR</button>');
     }, 800);
     return;
   }
@@ -419,7 +476,7 @@ function nextLevel() {
   level++;
   if (level > MAX_LEVELS) {
     gameState = STATES.WIN;
-    showMsg('<h1>¡GANASTE!</h1><div class="sub">¡Completaste los '+MAX_LEVELS+' niveles!</div><div class="score-line">Puntos: '+score+'</div><div class="hi-line">Record: '+hi+'</div><div class="blink-btn">PRESIONA ESPACIO PARA JUGAR DE NUEVO</div>');
+    showMsg('<h1>¡GANASTE!</h1><div class="sub">¡Completaste los '+MAX_LEVELS+' niveles!</div><div class="score-line">Puntos: '+score+'</div><div class="hi-line">Record: '+hi+'</div><button class="tap-btn" onclick="handleStart()">↺ JUGAR DE NUEVO</button>');
     return;
   }
   gameState = STATES.LEVEL_CLEAR;
@@ -458,9 +515,19 @@ function update(dt) {
   // ── Player movement
   if (player && player.alive) {
     var spd = player.speed * dt;
-    var left  = keys["ArrowLeft"]  || keys["KeyA"] || tcL;
-    var right = keys["ArrowRight"] || keys["KeyD"] || tcR;
-    var fire  = keys["Space"]      || keys["ArrowUp"] || keys["KeyW"] || tcF;
+    var left  = keys["ArrowLeft"]  || keys["KeyA"];
+    var right = keys["ArrowRight"] || keys["KeyD"];
+    var fire  = keys["Space"] || keys["ArrowUp"] || keys["KeyW"];
+
+    // Táctil: seguir el dedo con lerp suave
+    if (touching && touchX !== null) {
+      var diff = touchX - player.x;
+      var step = Math.min(Math.abs(diff), spd * 2.2);
+      player.x += (diff > 0 ? 1 : -1) * step;
+      player.x = Math.max(player.w / 2, Math.min(W - player.w / 2, player.x));
+      fire = true; // disparo automático en táctil
+    }
+
     if (left)  player.x = Math.max(player.w / 2, player.x - spd);
     if (right) player.x = Math.min(W - player.w / 2, player.x + spd);
 
@@ -748,6 +815,25 @@ function render() {
     drawPlayer(player);
   }
 
+  // Touch target indicator
+  if (touching && touchX !== null && player) {
+    ctx.globalAlpha = 0.25;
+    ctx.strokeStyle = "#7c5cff";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(touchX, player.y - player.h / 2);
+    ctx.lineTo(touchX, 44 * SCALE);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = "#7c5cff";
+    ctx.beginPath();
+    ctx.arc(touchX, player.y - player.h / 2 - 4 * SCALE, 4 * SCALE, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
   // Boss health bar
   if (bossEnemy) {
     var bx = 20 * SCALE, by = H - 28 * SCALE, bw = W - 40 * SCALE, bh = 6 * SCALE;
@@ -916,8 +1002,20 @@ function drawBoss(bo) {
 resize();
 initStars();
 player = createPlayer();
+updateCanvasRect();
+window.addEventListener("resize", updateCanvasRect);
 
-// Initial render loop for menu
+// Detectar si es táctil y ajustar texto del menú
+(function detectTouch() {
+  var sub = document.getElementById("menuSub");
+  if (!sub) return;
+  if (window.matchMedia("(pointer:coarse)").matches) {
+    isTouchDevice = true;
+    sub.innerHTML = "Desliza para mover la nave<br>El disparo es automático 🚀";
+  }
+})();
+
+// Initial render loop for menu / gameover / win screens
 (function menuLoop(ts) {
   if (gameState !== STATES.MENU && gameState !== STATES.GAME_OVER && gameState !== STATES.WIN) return;
   waveAnim += 0.016;
@@ -937,10 +1035,10 @@ player = createPlayer();
   requestAnimationFrame(menuLoop);
 })();
 
-window.addEventListener("keydown", function(e) {
-  if (e.code === "Space" && gameState === STATES.MENU) { initAC(); e.preventDefault(); }
+// Click en canvas (escritorio)
+canvas.addEventListener("click", function() {
+  if (gameState === STATES.MENU || gameState === STATES.GAME_OVER || gameState === STATES.WIN) { initAC(); startGame(); }
 });
-canvas.addEventListener("click", function() { if (gameState === STATES.MENU) { initAC(); startGame(); } });
 </script>
 </body>
 </html>
